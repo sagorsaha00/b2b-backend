@@ -1,0 +1,192 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma_client"
+}
+
+enum ROLE {
+  seller
+  buyer
+}
+
+enum SellerVerificationStatus {
+  pending
+  verified
+  rejected
+}
+
+enum OrderStatus {
+  pending
+  confirmed
+  shipped
+  delivered
+  cancelled
+}
+
+model businessInfoBuyer {
+  id             Int        @id @default(autoincrement())
+  name           String
+  businessLogo   String?
+  tradeLicense   String?
+  userNationalId String?
+  user           regBuyer[]
+
+  @@map("businessInfo")
+}
+
+model regBuyer {
+  id             Int                @id @default(autoincrement())
+  name           String
+  email          String             @unique
+  phoneNumber    String
+  profilePic     String?
+  location       String?
+  businessInfoId Int?
+  hashedPassword String
+  role           ROLE               @default(buyer)
+  businessInfo   businessInfoBuyer? @relation(fields: [businessInfoId], references: [id])
+  createdAt      DateTime           @default(now())
+  orders         order[]
+  wishlists      wishlist[]
+
+  @@map("buyerRegister")
+}
+
+model sellerProductItems {
+  id          Int               @id @default(autoincrement())
+  productId   Int
+  product     sellerProductInfo @relation(fields: [productId], references: [id])
+  minQuantity Int
+  maxQuantity Int?
+  price       Float
+
+  @@index([productId])
+  @@map("sellerProductItems")
+}
+
+model sellerProductInfo {
+  id                 Int                  @id @default(autoincrement())
+  sellerId           Int
+  seller             regSeller            @relation(fields: [sellerId], references: [id])
+  name               String
+  description        String?
+  discount           Float?               @default(0)
+  category           String
+  price              Float
+  stock              Int
+  unit               String
+  minimumQty         Int                  @default(1)
+  supplierCountry    String?
+  images             productImage[]
+  tiers              sellerProductTier[]
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  orders             order[]
+  wishlists          wishlist[]
+  sellerProductItems sellerProductItems[]
+
+  @@index([sellerId])
+  @@index([category])
+  @@index([supplierCountry])
+  @@map("sellerProducts")
+}
+
+model sellerProductTier {
+  id        Int               @id @default(autoincrement())
+  productId Int
+  product   sellerProductInfo @relation(fields: [productId], references: [id], onDelete: Cascade)
+  minQty    Int
+  maxQty    Int?
+  unitPrice Float
+
+  @@index([productId])
+  @@map("sellerProductTiers")
+}
+
+model productImage {
+  id        Int               @id @default(autoincrement())
+  productId Int
+  product   sellerProductInfo @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  publicId  String?
+  createdAt DateTime          @default(now())
+
+  @@index([productId])
+  @@map("productImages")
+}
+
+model regSeller {
+  id                 Int                      @id @default(autoincrement())
+  name               String
+  email              String                   @unique
+  number             String
+  hashedPassword     String
+  businessLocation   String
+  logo               String?
+  coverPhoto         String?
+  role               ROLE                     @default(seller)
+  verificationStatus SellerVerificationStatus @default(pending)
+  products           sellerProductInfo[]
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+  orders             order[]
+
+  @@map("sellerRegister")
+}
+
+enum PaymentStatus {
+  pending
+  paid
+  failed
+  refunded
+}
+
+model payment {
+  id        Int           @id @default(autoincrement())
+  orderId   Int           @unique
+  order     order         @relation(fields: [orderId], references: [id])
+  amount    Float
+  method    String
+  status    PaymentStatus @default(pending)
+  paidAt    DateTime?
+  createdAt DateTime      @default(now())
+
+  @@map("payments")
+}
+
+model order {
+  id          Int               @id @default(autoincrement())
+  buyerId     Int
+  buyer       regBuyer          @relation(fields: [buyerId], references: [id])
+  sellerId    Int
+  seller      regSeller         @relation(fields: [sellerId], references: [id])
+  productId   Int
+  product     sellerProductInfo @relation(fields: [productId], references: [id])
+  quantity    Int
+  totalAmount Float
+  status      OrderStatus       @default(pending)
+  payment     payment?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([buyerId])
+  @@index([sellerId])
+  @@map("orders")
+}
+
+model wishlist {
+  id        Int               @id @default(autoincrement())
+  buyerId   Int
+  buyer     regBuyer          @relation(fields: [buyerId], references: [id])
+  productId Int
+  product   sellerProductInfo @relation(fields: [productId], references: [id])
+  createdAt DateTime          @default(now())
+
+  @@unique([buyerId, productId])
+  @@index([buyerId])
+  @@index([productId])
+  @@map("wishlists")
+}
