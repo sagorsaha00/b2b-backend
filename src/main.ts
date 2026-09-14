@@ -1,6 +1,5 @@
 import express from "express";
 import cors from "cors";
-import { prisma } from "../database/index.js";
 import buyerRouter from "./router/buyerRouter.js";
 import OrderRouter from "./router/orderRouter.js";
 import sellerRouter from "./router/sellerRouter.js";
