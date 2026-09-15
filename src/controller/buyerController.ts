@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import bcrypt from "bcrypt";
 import { prisma } from "../../database/index.js";
-import { ApiError } from "../../middleware/ApiError.js";
+import { ApiError } from "../../middleware/apiError.js";
 
 export class BuyerController {
   //register
