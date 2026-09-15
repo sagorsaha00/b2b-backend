@@ -1,5 +1,5 @@
 import type { ErrorRequestHandler, RequestHandler } from "express";
-import { ApiError } from "./ApiError.js";
+import { ApiError } from "./apiError.js";
 import { Prisma } from "../generated/prisma_client/client.js";
 
 interface MappedError {

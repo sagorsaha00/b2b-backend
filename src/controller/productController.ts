@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import { type CreateProductInput } from "../../global/type.js";
 import { prisma } from "../../database/index.js";
 
-import { ApiError } from "../../middleware/ApiError.js";
+import { ApiError } from "../../middleware/apiError.js";
 import { BUSINESS_CATEGORIES } from "../lib/constant.js";
 import type { Prisma } from "../../generated/prisma_client/client.js";
 

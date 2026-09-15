@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import bcrypt from "bcrypt";
-import { ApiError } from "../../middleware/ApiError.js";
+import { ApiError } from "../../middleware/apiError.js";
 import { prisma } from "../../database/index.js";
 
 const allowedStatuses = ["pending", "verified", "rejected"] as const;

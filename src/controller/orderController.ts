@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { ApiError } from "../../middleware/ApiError.js";
+import { ApiError } from "../../middleware/apiError.js";
 import { prisma } from "../../database/index.js";
 import { resolveUnitPrice } from "../lib/index.js";
 
