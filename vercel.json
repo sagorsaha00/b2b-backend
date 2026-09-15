@@ -6,9 +6,7 @@
             "use": "@vercel/node",
             "config": {
                 "includeFiles": [
-                    "generated/**",
-                    "node_modules/.prisma/**",
-                    "node_modules/@prisma/**"
+                    "generated/**/*"
                 ]
             }
         }
