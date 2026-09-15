@@ -12,8 +12,7 @@
     "typecheck": "tsc --noEmit",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
-    "db:studio": "prisma studio",
-    "deploy": "pnpm run build"
+    "db:studio": "prisma studio"
   },
   "keywords": [],
   "author": "",
