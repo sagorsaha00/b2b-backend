@@ -109,68 +109,92 @@ export class SellerController {
   //   });
   // };
   getPaginatedSellers = async (req: Request, res: Response): Promise<void> => {
-    const { verificationStatus, search, page = "1", limit = "10" } = req.query;
+    try {
+      const {
+        verificationStatus,
+        search,
+        page = "1",
+        limit = "10",
+      } = req.query;
 
-    let status: SellerVerificationStatus | undefined;
+      let status: SellerVerificationStatus | undefined;
 
-    if (verificationStatus) {
-      const statusValue = String(verificationStatus);
+      if (verificationStatus && verificationStatus !== "all") {
+        const statusValue = String(verificationStatus);
 
-      if (!allowedStatuses.includes(statusValue as SellerVerificationStatus)) {
-        throw new ApiError(
-          400,
-          `verificationStatus must be one of: ${allowedStatuses.join(", ")}`,
-        );
+        if (
+          !allowedStatuses.includes(statusValue as SellerVerificationStatus)
+        ) {
+          throw new ApiError(
+            400,
+            `verificationStatus must be one of: ${allowedStatuses.join(", ")}`,
+          );
+        }
+
+        status = statusValue as SellerVerificationStatus;
       }
 
-      status = statusValue as SellerVerificationStatus;
-    }
+      const pageNum = Math.max(1, parseInt(String(page), 10) || 1);
+      const limitNum = Math.max(1, parseInt(String(limit), 10) || 10);
+      const skip = (pageNum - 1) * limitNum;
 
-    const pageNum = Math.max(1, parseInt(String(page), 10) || 1);
-    const limitNum = Math.max(1, parseInt(String(limit), 10) || 10);
-    const skip = (pageNum - 1) * limitNum;
+      const whereCondition: any = {};
 
-    const whereCondition: any = {};
+      if (status) {
+        whereCondition.verificationStatus = status;
+      }
 
-    if (status) {
-      whereCondition.verificationStatus = status;
-    }
+      if (search && String(search).trim() !== "") {
+        const searchTerm = String(search).trim();
 
-    if (search) {
-      const searchTerm = String(search).trim();
-      whereCondition.OR = [
-        { companyName: { contains: searchTerm, mode: "insensitive" } },
-        { contactName: { contains: searchTerm, mode: "insensitive" } },
-        { email: { contains: searchTerm, mode: "insensitive" } },
-      ];
-    }
+        // Matched directly to your regSeller schema fields
+        whereCondition.OR = [
+          { name: { contains: searchTerm, mode: "insensitive" } },
+          { email: { contains: searchTerm, mode: "insensitive" } },
+          { number: { contains: searchTerm, mode: "insensitive" } },
+          { businessLocation: { contains: searchTerm, mode: "insensitive" } },
+        ];
+      }
 
-    const [total, sellers] = await prisma.$transaction([
-      prisma.regSeller.count({ where: whereCondition }),
-      prisma.regSeller.findMany({
-        where: whereCondition,
-        skip,
-        take: limitNum,
-        orderBy: {
-          createdAt: "desc",
+      const [total, sellers] = await prisma.$transaction([
+        prisma.regSeller.count({ where: whereCondition }),
+        prisma.regSeller.findMany({
+          where: whereCondition,
+          skip,
+          take: limitNum,
+          orderBy: {
+            createdAt: "desc",
+          },
+        }),
+      ]);
+
+      const totalPages = Math.ceil(total / limitNum) || 1;
+
+      res.status(200).json({
+        success: true,
+        data: sellers,
+        pagination: {
+          total,
+          page: pageNum,
+          limit: limitNum,
+          totalPages,
+          hasNextPage: pageNum < totalPages,
+          hasPrevPage: pageNum > 1,
         },
-      }),
-    ]);
-
-    const totalPages = Math.ceil(total / limitNum);
-
-    res.status(200).json({
-      success: true,
-      data: sellers,
-      pagination: {
-        total,
-        page: pageNum,
-        limit: limitNum,
-        totalPages,
-        hasNextPage: pageNum < totalPages,
-        hasPrevPage: pageNum > 1,
-      },
-    });
+      });
+    } catch (error: any) {
+      console.error("Error in getPaginatedSellers:", error);
+      if (error instanceof ApiError) {
+        res
+          .status(error.statusCode)
+          .json({ success: false, message: error.message });
+        return;
+      }
+      res.status(500).json({
+        success: false,
+        message: error?.message || "Internal server error",
+      });
+    }
   };
   getSellerById = async (req: Request, res: Response): Promise<void> => {
     const id = Number(req.params.id);
