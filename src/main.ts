@@ -8,27 +8,30 @@ import productRouter from "./router/productRouter.js";
 import "dotenv/config";
 
 const app = express();
-app.use(express.json());
 
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: "*", // Vercel deployment-এর জন্য আপাতত '*' রাখুন
   }),
 );
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get("/", async (req, res) => {
+app.get("/", (req, res) => {
   res.send("server is ok no tension");
 });
 
-//router
+// Routers
 app.use("/api/buyer", buyerRouter);
 app.use("/api/order", OrderRouter);
 app.use("/api/seller", sellerRouter);
 app.use("/api/product", productRouter);
-const PORT = 5000;
 
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
+if (process.env.NODE_ENV !== "production") {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+  });
+}
+
+export default app;
