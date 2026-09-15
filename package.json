@@ -13,7 +13,7 @@
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
     "db:studio": "prisma studio",
-    "deploy": "pnpm run build && wrangler deploy"
+    "deploy": "pnpm run build"
   },
   "keywords": [],
   "author": "",
